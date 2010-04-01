@@ -1,0 +1,56 @@
+/**
+ * Carbon.JS - A simple JavaScript framework
+ *
+ * Carbon.JS CSS - CSS-styles for picViewer-plugin
+ *
+ * @author		Dmitry Polyuhov <admin@carbonjs.com>
+ * @license		http://carbonjs.com/mit-license.txt
+ * @version		1.1.0
+ */
+
+#picViewer {
+	position: absolute;
+	top: 50px;
+	left: 100px;
+	z-index: 100;
+}
+#picViewer #pv_content {
+	text-align: center;
+	background-color: #fff;
+	width: 100px;
+	height: 100px;
+}
+#picViewer #lt {
+	width: 22px;
+	height: 22px;
+}
+#picViewer #t {height: 22px;}
+#picViewer #rt {
+	width: 22px;
+	height: 22px;
+}
+#picViewer #r {width: 22px;}
+#picViewer #rb {
+	width: 22px;
+	height: 22px;
+}
+#picViewer #b {height: 22px;}
+#picViewer #lb {
+	width: 22px;
+	height: 22px;
+}
+#picViewer #l {width: 22px;}
+#picViewer #pv_title {
+	margin-top: 5px;
+	display: none;
+	height: 0px;
+	overflow: hidden;
+}
+#picViewer #pv_text {
+	font-family: Verdana, sans-serif;
+	font-size: 16px;
+	color: #000;
+	text-align: center;	
+}
+#picViewer #pv_text span {font-weight: bolder;}
+#picViewer #pv_close {text-align: right;}
