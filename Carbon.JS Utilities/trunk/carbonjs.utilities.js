@@ -5,7 +5,7 @@
  *
  * @author		Dmitry Polyuhov <admin@carbonjs.com>
  * @license		http://carbonjs.com/mit-license.txt
- * @version		1.1.0 (build 20100306)
+ * @version		1.1.0 (build 20100706)
  */
 
 /**
@@ -34,14 +34,14 @@ CarbonJS.Browsers = {
 /**
  * Array of event handlers used in Carbon.JS
  */
-CarbonJS.events = []; // Все установленные обработчики событий записываются сюда
+CarbonJS.service.events = []; // Все установленные обработчики событий записываются сюда
 
 /**
  * Garbage collector, erase the event-handlers of selected elements in order to avoid memory leaks
  */
 (function() {
 	function removeEventHandlers() { // Чтобы избежать утечек памяти во всеми любимом браузере, удаляем вручную все установленные обработчики событий
-		while (CarbonJS.events.length > 0) Q(CarbonJS.events[0].obj).removeEvent(CarbonJS.events[0].evt);
+		while (CarbonJS.service.events.length > 0) Q(CarbonJS.service.events[0].obj).removeEvent(CarbonJS.service.events[0].evt);
 	}
 	var oldfunc = window.onunload;
 	if (typeof window.onunload != "function") {
@@ -57,15 +57,15 @@ CarbonJS.events = []; // Все установленные обработчик�
 /**
  * Cache of elements, which display-property was changed
  */
-CarbonJS.__displayCache = {};
+CarbonJS.service.displayCache = {};
 
 /**
  * Checking the visibility of the element
  * @param {Node} elem
  */
-CarbonJS.elemIsHidden = function(elem) {
+CarbonJS.service.elemIsHidden = function(elem) {
 	var width = elem.offsetWidth, height = elem.offsetHeight, tr = elem.nodeName.toLowerCase() === "tr";
-	return width === 0 && height === 0 && !tr ? true : width > 0 && height > 0 && !tr ? false :	Q(elem).css("display");
+	return width === 0 && height === 0 && !tr ? true : width > 0 && height > 0 && !tr ? false : Q(elem).css("display");
 }
 
 CarbonJS.extend({
@@ -97,13 +97,17 @@ CarbonJS.extend({
 			this.forEach(function() {
 				for (n in attrs) {
 					cur = n;
-					if (n != "MozOpacity" && n != "KhtmlOpacity") { // Если мы не работаем со спицифичными свойствами прозрачности,
-						n = n.replace(/\-(\w)/g, function() { // то переводим css-свойства, записанные в обычном виде, в формат interCap
-							return arguments[1].toUpperCase();
-						});
-					}
-					if (n == "float") { // Также следует помнить, что css-свойству float в JavaScript соответствует styleFloat
-						this.style["styleFloat"] = attrs[cur];
+					n = n.replace(/\-(\w)/g, function() { // Переводим css-свойства, записанные в обычном виде, в формат interCap
+						return arguments[1].toUpperCase();
+					});
+					if (n == "float") { // Следует помнить, что css-свойству float в JavaScript в IE соответствует styleFloat, а в остальных браузерах - cssFloat
+						this.style[(typeof document.body.style.cssFloat == "string") ? "cssFloat" : "styleFloat"] = attrs[cur];
+					} else if (n == "opacity") { // Устанавливаем кросс-браузерную прозрачность для элементов
+						var val = parseFloat(attrs[cur]);
+						if (typeof document.body.style.opacity == "string") this.style.opacity = val;
+						if (document.body.filters) this.style.filter = "progid:DXImageTransform.Microsoft.Alpha(opacity=" + (val * 100) + ")";
+						if (typeof document.body.style.MozOpacity == "string") this.style.MozOpacity = val;
+						if (typeof document.body.style.KhtmlOpacity == "string") this.style.KhtmlOpacity = val;
 					} else {
 						this.style[n] = attrs[cur];
 					}
@@ -112,58 +116,20 @@ CarbonJS.extend({
 			return this;
 		} else if (typeof attrs == "string") {
 			cur = attrs;
-			if (cur != "MozOpacity" && cur != "KhtmlOpacity") {
-				cur = cur.replace(/\-(\w)/g, function() {
-					return arguments[1].toUpperCase();
-				});
+			cur = cur.replace(/\-(\w)/g, function() {
+				return arguments[1].toUpperCase();
+			});
+			if (cur == "float") cur = (typeof document.body.style.cssFloat == "string") ? "cssFloat" : "styleFloat";
+			if (cur == "opacity") {
+				if (typeof document.body.style.opacity == "string") return this[0].style["opacity"];
+				if (document.body.filters) return this[0].filters["DXImageTransform.Microsoft.Alpha"].opacity / 100;
+				if (typeof document.body.style.MozOpacity == "string") return this[0].style["MozOpacity"];
+				if (typeof document.body.style.KhtmlOpacity == "string") return this[0].style["KhtmlOpacity"];
 			}
-			if (cur == "float") cur = "styleFloat";
 			if (window.getComputedStyle) { // Используем этот метод для Firefox, чтобы можно было получить css-свойство, записанное в подключаемом к странице файле со стилями
 				return window.getComputedStyle(this[0], null)[cur];
 			} else { // Для других браузеров:
 				return this[0].currentStyle[cur];
-			}
-		}
-	},
-	
-	/**
-	 * Get and set transparence of selected elements
-	 * @param {Number, String} val The degree of transparency
-	 * @return {Number}
-	 */
-	transparence: function(val) {
-		var opElem = "undefined";
-		if (document.body.filters) {
-			opElem = "filter";
-		} else if (typeof document.body.style.MozOpacity == "string") {
-			opElem = "MozOpacity";
-		} else if (typeof document.body.style.KhtmlOpacity == "string") {
-			opElem = "KhtmlOpacity";
-		} else if (typeof document.body.style.opacity == "string") {
-			opElem = "opacity";
-		}
-		if (this.length == 0) {
-			return opElem;
-		} else {
-			if (val == null) {
-				if (opElem != "filter") {
-					return parseInt(parseFloat(this.css(opElem)) * 100); // Хотя прозрачность задаётся числом от 0 до 1, возвращать для удобства будем число от 0 до 100
-				} else {
-					return parseInt(this.attr("transparence"));
-				}
-			} else {
-				if (opElem != "filter") {
-					if (opElem == "MozOpacity") {
-						this.css({MozOpacity: parseInt(val) / 100});
-					} else if (opElem == "KhtmlOpacity") {
-						this.css({KhtmlOpacity: parseInt(val) / 100});
-					} else if (opElem == "opacity") {
-						this.css({opacity: parseInt(val) / 100});
-					}
-				} else { // В браузерах IE нельзя получать значение свойства, заданного через фильтры, поэтому заводим для элементов с прозрачностью отдельное свойство
-					this.css({filter: "progid:DXImageTransform.Microsoft.Alpha(opacity=" + parseInt(val) + ")"}).attr({transparence: parseInt(val)});
-				}
-				return this;
 			}
 		}
 	},
@@ -206,15 +172,15 @@ CarbonJS.extend({
 			elem.css({display: old || ""});
 			if (elem.css("display") === "none") {
 				var nodeName = this.nodeName, body = document.body, display;
-				if (CarbonJS.__displayCache[nodeName]) {
-					display = CarbonJS.__displayCache[nodeName];
+				if (CarbonJS.service.displayCache[nodeName]) {
+					display = CarbonJS.service.displayCache[nodeName];
 				} else {
 					var testElem = document.createElement(nodeName);
 					body.appendChild(testElem);
 					display = Q(testElem).css("display");
 					if (display == "none") display = "block";
 					body.removeChild(testElem);
-					CarbonJS.__displayCache[nodeName] = display;
+					CarbonJS.service.displayCache[nodeName] = display;
 				}
 				elem.attr({displayOld: display});
 				elem.css({display: display});
@@ -242,7 +208,7 @@ CarbonJS.extend({
 	 */
 	toggle: function() {
 		this.forEach(function() {
-			CarbonJS.elemIsHidden(this) ? Q(this).show() : Q(this).hide();
+			CarbonJS.service.elemIsHidden(this) ? Q(this).show() : Q(this).hide();
 		});
 		return this;
 	},
@@ -334,7 +300,7 @@ CarbonJS.extend({
 					this["on" + evnt] = func;
 				}
 			}
-			CarbonJS.events.push({ // Записываем установленный обработчик события в специальный массив
+			CarbonJS.service.events.push({ // Записываем установленный обработчик события в специальный массив
 				obj: this,
 				evt: evnt,
 				func: func
@@ -351,16 +317,16 @@ CarbonJS.extend({
 	removeEvent: function(evnt) {
 		this.forEach(function() {
 			var k = -1;
-			while (++k < CarbonJS.events.length) {
-				if (CarbonJS.events[k].obj == this && CarbonJS.events[k].evt == evnt) {
+			while (++k < CarbonJS.service.events.length) {
+				if (CarbonJS.service.events[k].obj == this && CarbonJS.service.events[k].evt == evnt) {
 					if (this.removeEventListener) {
-						this.removeEventListener(evnt, CarbonJS.events[k].func, false);
+						this.removeEventListener(evnt, CarbonJS.service.events[k].func, false);
 					} else if (this.detachEvent) {
-						this.detachEvent("on" + evnt, CarbonJS.events[k].func);
+						this.detachEvent("on" + evnt, CarbonJS.service.events[k].func);
 					} else {
 						this["on" + evnt] = "";
 					}
-					CarbonJS.events.splice(k, 1); // Стираем удалённый обработчик события из массива
+					CarbonJS.service.events.splice(k, 1); // Стираем удалённый обработчик события из массива
 					break;
 				}
 			}
