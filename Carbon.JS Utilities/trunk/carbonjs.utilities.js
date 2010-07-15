@@ -5,7 +5,7 @@
  *
  * @author		Dmitry Polyuhov <admin@carbonjs.com>
  * @license		http://carbonjs.com/mit-license.txt
- * @version		1.1.0 (build 20100706)
+ * @version		1.1.0 (build 20100716)
  */
 
 /**
@@ -18,7 +18,7 @@ CarbonJS.modules.utilities = true;
  */
 CarbonJS.Browsers = {
 	IE: function() {
-		return ('\v' == 'v'); // Срабатывает только в Internet Explorer
+		return ("\v" == "v"); // Срабатывает только в Internet Explorer
 	},
 	FF: function() {
 		return (navigator.userAgent.toLowerCase().indexOf("firefox") != -1);
@@ -218,7 +218,7 @@ CarbonJS.extend({
 	 * @param {String, Number, Object} val Coordinate or event-object
 	 * @return {Number, NodeList}
 	 */
-	x: function(val) {
+	x: function(val, posType) {
 		if (this.length == 0) {
 			var x;
 			val = val || window.event;
@@ -230,7 +230,6 @@ CarbonJS.extend({
 			return parseInt(x);
 		} else {
 			if (val != null) {
-				if (this.css("position") != "absolute") this.css({position: "absolute"});
 				this.css({left: parseInt(val) + "px"});
 				return this;
 			} else {
@@ -250,7 +249,7 @@ CarbonJS.extend({
 	 * @param {String, Number, Object} val Coordinate or event-object
 	 * @return {Number, NodeList}
 	 */
-	y: function(val) {
+	y: function(val, posType) {
 		if (this.length == 0) {
 			var y;
 			val = val || window.event;
@@ -262,7 +261,6 @@ CarbonJS.extend({
 			return parseInt(y);
 		} else {
 			if (val != null) {
-				this.css("position") != "absolute" ? this.css({position: "absolute"}) : "";
 				this.css({top: parseInt(val) + "px"});
 				return this;
 			} else {
