@@ -218,7 +218,7 @@ CarbonJS.extend({
 	 * @param {String, Number, Object} val Coordinate or event-object
 	 * @return {Number, NodeList}
 	 */
-	x: function(val, posType) {
+	x: function(val) {
 		if (this.length == 0) {
 			var x;
 			val = val || window.event;
@@ -249,7 +249,7 @@ CarbonJS.extend({
 	 * @param {String, Number, Object} val Coordinate or event-object
 	 * @return {Number, NodeList}
 	 */
-	y: function(val, posType) {
+	y: function(val) {
 		if (this.length == 0) {
 			var y;
 			val = val || window.event;
