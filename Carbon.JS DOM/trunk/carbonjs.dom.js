@@ -5,7 +5,7 @@
  *
  * @author		Dmitry Polyuhov <admin@carbonjs.com>
  * @license		http://carbonjs.com/mit-license.txt
- * @version		1.1.0 (build 20100321)
+ * @version		1.1.0 (build 20100826)
  */
 
 /**
@@ -18,7 +18,7 @@ CarbonJS.modules.dom = true;
  * so you need to update the cache of Carbon.JS to avoid the return of incorrect elements.
  */ 
 CarbonJS.refreshCache = function() {
-	CarbonJS.__cache = {};
+	CarbonJS.cache = {};
 }
 
 CarbonJS.extend({
